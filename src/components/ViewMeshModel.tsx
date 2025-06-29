@@ -1,7 +1,7 @@
 import { useLoader } from "@react-three/fiber";
 import { STLLoader } from "three/examples/jsm/Addons.js";
 
-const StlMesh = ({ url }: { url: string }) => {
+const ViewMeshModel = ({ url }: { url: string }) => {
   const geometry = useLoader(STLLoader, url);
 
   return (
@@ -11,4 +11,4 @@ const StlMesh = ({ url }: { url: string }) => {
   );
 };
 
-export default StlMesh;
+export default ViewMeshModel;
