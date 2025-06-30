@@ -6,7 +6,7 @@ const ViewMeshModel = ({ url }: { url: string }) => {
 
   return (
     <mesh geometry={geometry} scale={[0.01, 0.01, 0.01]}>
-      <meshStandardMaterial color="hotpink" />
+      <meshNormalMaterial/>
     </mesh>
   );
 };

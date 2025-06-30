@@ -20,7 +20,7 @@ const ViewModel = ({
   const [isDragging, setIsDragging] = useState(false);
   return (
     <Canvas>
-      <GizmoHelper alignment="bottom-right">
+      <GizmoHelper alignment="bottom-right" margin={[160,160]}>
         <GizmoViewport
           axisColors={["red", "green", "blue"]}
           labelColor="black"
