@@ -1,6 +1,6 @@
 "use client";
 
-import StlMesh from "@/components/ViewMeshModel";
+// import StlMesh from "@/components/ViewMeshModel";
 import {
   GizmoHelper,
   GizmoViewport,
@@ -9,6 +9,20 @@ import {
 import { Canvas, useThree } from "@react-three/fiber";
 import { useState, useRef, useCallback } from "react";
 import * as THREE from "three";
+
+import { useLoader } from "@react-three/fiber";
+import { STLLoader } from "three/examples/jsm/Addons.js";
+
+const StlMesh = ({ url }: { url: string }) => {
+  const geometry = useLoader(STLLoader, url);
+
+  return (
+    <mesh geometry={geometry} scale={[0.01, 0.01, 0.01]}>
+      <meshNormalMaterial/>
+    </mesh>
+  );
+};
+
 
 // Landmark component to render individual landmarks
 function Landmark({ position, id, onRemove }) {
@@ -20,7 +34,7 @@ function Landmark({ position, id, onRemove }) {
         onRemove(id);
       }}
     >
-      <sphereGeometry args={[0.05, 8, 8]} />
+      <sphereGeometry args={[0.005, 8, 8]} />
       <meshBasicMaterial color="red" transparent opacity={0.8} />
     </mesh>
   );
@@ -30,14 +44,30 @@ function Landmark({ position, id, onRemove }) {
 function Scene({ onLandmarkAdd, landmarks, onLandmarkRemove }) {
   const { camera, raycaster } = useThree();
   const meshRef = useRef();
+  //avoid adding landmark when moving around the object
+  const [isDragging, setIsDragging] = useState(false);
+  const mouseDownPos = useRef({ x: 0, y: 0 });
+
+  const handlePointerDown = (event) => {
+    mouseDownPos.current = { x: event.pointer.x, y: event.pointer.y };
+    setIsDragging(false);
+  };
   
   const handleClick = useCallback((event) => {
-    if (!meshRef.current) return;
+    //If click is not on the mesh or user is rotating mesh don't add landmark
+    if (!meshRef.current || isDragging) return;
+
+  const distance = Math.sqrt(
+    Math.pow(event.pointer.x - mouseDownPos.current.x, 2) +
+    Math.pow(event.pointer.y - mouseDownPos.current.y, 2)
+  );
+  // Only place landmark if mouse didn't move much (threshold for click vs drag)
+  if (distance > 0.01) return;
     
     // Get mouse position in normalized device coordinates
     const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    mouse.x = event.pointer.x;
+    mouse.y = event.pointer.y;
     
     // Update raycaster
     raycaster.setFromCamera(mouse, camera);
@@ -53,7 +83,7 @@ function Scene({ onLandmarkAdd, landmarks, onLandmarkRemove }) {
       if (intersection.face) {
         const normal = intersection.face.normal.clone();
         normal.transformDirection(intersection.object.matrixWorld);
-        point.add(normal.multiplyScalar(0.1));
+        point.add(normal.multiplyScalar(0.001));//if points needs to be on mesh then reduce this
       }
       
       onLandmarkAdd(point);
@@ -80,7 +110,7 @@ function Scene({ onLandmarkAdd, landmarks, onLandmarkRemove }) {
       />
       <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 
-      <group ref={meshRef} onClick={handleClick}>
+      <group ref={meshRef} onClick={handleClick} onPointerDown={handlePointerDown}>
         <StlMesh url="https://bsdgncamawsfsmpmxevw.supabase.co/storage/v1/object/public/all//fixed.stl" />
       </group>
       
@@ -107,7 +137,7 @@ export default function LandmarkPage() {
     if (mode !== 'add') return;
     
     const newLandmark = {
-      id: Date.now(),
+      id: position.x + position.y + position.z,
       position: [position.x, position.y, position.z],
       coordinates: position
     };
