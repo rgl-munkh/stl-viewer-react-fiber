@@ -10,7 +10,8 @@ const Header = () => {
   const navItems = [
     { name: 'View 3D', href: '/' },
     { name: 'Move and Rotate 3D', href: '/move-rotate' },
-    { name: 'Cut 3D', href: '/cut' }
+    { name: 'Cut 3D', href: '/cut' },
+    { name: 'Landmark', href: '/landmark' }
   ]
 
   return (
